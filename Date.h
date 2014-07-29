@@ -60,12 +60,12 @@ public:
 		return _time >= d._time;
 	}
 	
-	std::string toString() const { return std::ctime(&_time); }
+	std::string to_string() const { return std::ctime(&_time); }
 
-	time_t getRawTime() const { return _time; }
-	std::string getDay() const { return this->toString().substr(0, 3); }
-	std::string withoutTime() const { 
-		return this->toString().substr(0, 11).append( this->toString().substr(20) );
+	time_t get_raw_time() const { return _time; }
+	std::string get_day() const { return this->to_string().substr(0, 3); }
+	std::string without_time() const { 
+		return this->to_string().substr(0, 11).append( this->to_string().substr(20) );
 	}
 
 private:
@@ -83,7 +83,7 @@ Date operator-(const Date &d1, const Date &d2) {
 */
 
 std::ostream &operator<<(std::ostream &out, const Date &d) {
-	out << d.toString();
+	out << d.to_string();
 	return out;
 }
 

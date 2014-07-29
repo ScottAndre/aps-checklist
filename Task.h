@@ -26,12 +26,12 @@ public:
 
 	const std::string get() const { return _task; }
 
-	void markComplete() { _complete = true; }
-	void markIncomplete() { _complete = false; }
+	void mark_complete() { _complete = true; }
+	void mark_incomplete() { _complete = false; }
 
-	bool isComplete() const { return _complete; }
-	bool isRecurring() const { return _recurrence != none; }
-	bool isPersistent() const { return _persistent; }
+	bool is_complete() const { return _complete; }
+	bool is_recurring() const { return _recurrence != none; }
+	bool is_persistent() const { return _persistent; }
 
 	void update(); // for recurring tasks, updates the Task's date to the next occurence
 
@@ -39,8 +39,8 @@ private:
 	std::string _task;
 	Date _date;
 	Recurrence _recurrence;
-	int _recurrenceInterval;
-	std::vector<std::string> _recurrencePeriod;
+	int _recurrence_interval;
+	std::vector<std::string> _recurrence_period;
 	bool _persistent;
 	bool _complete;
 };

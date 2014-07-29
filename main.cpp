@@ -6,15 +6,22 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <vector>
 
 #include "Date.h"
 #include "Task.h"
 
+void draw();
+
 int main(int argc, char ** argv) {
+
+	//std::vector<Task> task_list;
 
 	Date d;
 
-	std::cout << d.getDay() << std::endl;
+	std::cout << d.get_day() << std::endl;
+
+	draw();
 
 	return 0;
 }
@@ -26,5 +33,5 @@ int main(int argc, char ** argv) {
 void draw() {
 	system("clear");
 	Date now;
-	std::cout << now.withoutTime() << "\n\n";
+	std::cout << now.without_time() << "\n\n";
 }
