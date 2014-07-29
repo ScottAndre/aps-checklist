@@ -1,0 +1,38 @@
+main:
+	clear terminal
+	print today's date at the top
+	fetch list of tasks
+	all those marked INCOMPLETE should be listed at the top:
+		Incomplete:
+			1. task information
+			2. task information
+			etc.
+	all those marked COMPLETE should be listed below those
+	spawn time-check thread
+	spawn user-input thread
+	main should then pause and wait for messages from user-input or time-check
+		messages it can receive:
+			markcomplete - receive a task index, mark that task complete
+			markincomplete - receive a task index, mark that task incomplete
+			addtask - receive task parameters, create a new task, add it to the task list
+			removetask - receive array of task indices, remove all specified tasks from the task list
+		after receiving any message, main redraws the screen
+
+user-input
+	waits for user input (here, x specifies an index)
+	"complete x" or "c x" : send message markcomplete(x)
+	"incomplete x" or "i x" : send message markincomplete(x)
+	"add 'task' [-r 'recurrence'] [-p]" : send message addtask(params)
+		'task' is a string, that says what the task is
+		-r specifies this is a recurring task. 'recurrence' can be a string or an integer:
+		If 'recurrence' is a string, then it specifies what day/days of the week it should recur on. It is not case-sensitive. "Monday", "Mon" and "M" all specify Monday. "Monday,Wednesday,Fri" specifies Monday, Wednesday and Friday. "MTWRF" specifies all week days.
+		If 'recurrence' is an integer y, then it specifies that the task should recur every y days. -r 1 specifies that the task should recur every day. -r 5 specifies that the task should recur every 5 days. -r 14 specifies that the task should recur every two weeks.
+		-p specifies that this is a persistent task, that is, it does not disappear from the task list until it is complete.
+		PLANNED FEATURE: -s 'startdate'
+	"a 'task' [options]" : same as "add 'task' [options]"
+	"remove x y z" or "r x y z" : send message removetask([x, y, z])
+
+time-check:
+	checks the time once per minute
+	keeps track of the current day
+	
