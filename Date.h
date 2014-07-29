@@ -10,6 +10,7 @@
 #include <ctime>
 #include <string>
 #include <iostream>
+#include <utility>
 
 class Date {
 public:
@@ -21,11 +22,18 @@ public:
 	} 
 	Date(const Date &d)
 	:_time(d._time) {}
+	Date(Date &&d)
+	:_time(std::move(d._time)) {}
 
 	Date &operator=(const Date &d) {
 		if(this != &d) _time = d._time; // 'if' is probably unnecessary but it's good practice
 		return *this;
 	}
+	Date &operator=(Date &&d) {
+		if(this != &d) _time = std::move(d._time); // here it most certainly is necessary
+		return *this;
+	}
+
 	Date &operator+=(const Date &d) {
 		_time += d._time;
 		return *this;
