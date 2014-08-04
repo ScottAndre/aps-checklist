@@ -6,29 +6,32 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <clocale>
 #include <vector>
 #include <utility>
 
 #include "Date.h"
 #include "Task.h"
 
-void draw();
+void draw(const std::vector<Task> &);
+
+void construct_test_tasks(std::vector<Task> &task_list) {
+	Task one("Bake a cake", false);
+	Task two("Slaughter your enemies admist merriment and laughter", false);
+	Task three("Bake another cake", false);
+
+	task_list = { one, two, three };
+}
 
 int main(int argc, char ** argv) {
 
-	//std::vector<Task> task_list;
+	setlocale(LC_ALL, "");
 
-	Date now;
+	std::vector<Task> task_list;
 
-	std::cout << now << "\n";
+	construct_test_tasks(task_list);
 
-	Date next = std::move(now);
-
-	std::cout << next << "\n" << "Undefined behavior!!!!" << "\n";
-
-	std::cout << now << "\n";
-
-	//draw(task_list);
+	draw(task_list);
 
 	return 0;
 }
@@ -37,8 +40,12 @@ int main(int argc, char ** argv) {
  * Draws the checklist interface.
  * Currently does not support Windows systems. Possible that it someday will, but unlikely.
  */
-void draw(std::vector<Task> &task_list) {
+void draw(const std::vector<Task> &task_list) {
 	system("clear");
 	Date now;
-	std::cout << now.without_time() << "\n\n";
+	std::cout << now << "\n\n";
+
+	for(Task t : task_list) {
+		std::cout << '\t' << u8"\u2611" << u8"\u2610" << ' ' << t.get() << "\n";
+	}
 }
