@@ -10,19 +10,26 @@
 #include <string>
 #include <vector>
 
+#include "Date.h"
+
 enum Recurrence {
 	none,     // no recurrence
-	interval, // recurs once every x days
+	intervallic, // recurs once every x days
 	periodic  // recurs on certain days each week (maybe need new name)
 };
 
 class Task {
 public:
-	Task(std::string task);
-	~Task();
+	Task(std::string task, bool p);
+	Task(std::string task, const std::string r_period, bool p);
+	Task(std::string task, int r_interval, bool p);
+	~Task() {}
 
 	Task(const Task &t);
+	Task(Task &&t);
+
 	Task &operator=(const Task &t);
+	Task &operator=(Task &&t);
 
 	const std::string get() const { return _task; }
 
@@ -34,6 +41,9 @@ public:
 	bool is_persistent() const { return _persistent; }
 
 	void update(); // for recurring tasks, updates the Task's date to the next occurence
+
+	void set_recurrence(const std::string period); // set periodic recurrence for a task. Throws an error if _recurrence != periodic
+	void set_recurrence(int interval); // set interval recurrence for a task. Throws an error if _recurrence != intervallic
 
 private:
 	std::string _task;
