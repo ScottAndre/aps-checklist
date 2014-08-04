@@ -1,5 +1,8 @@
 
 CC=g++-4.9
 
-date-test : main.cpp Date.h
+task-test : Date.cpp Task.cpp main.cpp 
+	$(CC) -o $@ $^ --std=c++11
+
+date-test : Date.cpp main.cpp 
 	$(CC) -o $@ $^ --std=c++11
