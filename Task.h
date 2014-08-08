@@ -18,6 +18,10 @@ enum Recurrence {
 	periodic  // recurs on certain days each week (maybe need new name)
 };
 
+enum Weekday {
+	Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+};
+
 class Task {
 public:
 	Task(std::string task, bool p);
@@ -45,15 +49,24 @@ public:
 	void set_recurrence(const std::string period); // set periodic recurrence for a task. Throws an error if _recurrence != periodic
 	void set_recurrence(int interval); // set interval recurrence for a task. Throws an error if _recurrence != intervallic
 
+	std::string serialize();
+	static Task deserialize(std::string serialized_task);
+
 private:
 	std::string _task;
 	Date _date;
 	Recurrence _recurrence;
 	int _recurrence_interval;
-	std::vector<std::string> _recurrence_period;
+	std::vector<Weekday> _recurrence_period;
 	bool _persistent;
 	bool _complete;
 };
+
+#ifdef UNIT_TEST
+namespace Unittest {
+	std::string get_next_token(std::string &);
+}
+#endif
 
 #endif
 

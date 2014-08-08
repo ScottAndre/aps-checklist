@@ -69,7 +69,28 @@ void date_unittest() {
 }
 
 void task_unittest() {
+	Task n_test_task("Testing", false);          // Non-recurring task
+	Task i_test_task("Testing", "MTWRF", false); // Periodically recurring task
+	Task p_test_task("Testing", 2, false);       // Intervallically recurring task
 	
+
+	/* Serialization tests */
+
+	// Test get_next_token()
+	[]() {
+		std::string serialized_str = "one;two;three;";
+		std::string expected_val = "one";
+		std::string expected_remainder = "two;three;";
+		auto result_val = Unittest::get_next_token(serialized_str);
+		if(result_val != expected_val || serialized_str != expected_remainder) {
+			print_error("get_next_token() (Task internal)", expected_val + " (value)", result_val + " (value)");
+			print_error("get_next_token() (Task internal)", expected_remainder + " (remainder)", serialized_str + " (remainder)");
+		}
+	}();
+
+	// Task::serialize()
+
+	// Task::deserialize()
 }
 
 void main_unittest() {
