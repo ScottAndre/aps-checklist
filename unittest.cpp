@@ -6,8 +6,6 @@
  * Copyright Scott Andre 2014
  */
 
-#define UNIT_TEST
-
 #include <iostream>
 #include <string>
 
@@ -81,7 +79,7 @@ void task_unittest() {
 		std::string serialized_str = "one;two;three;";
 		std::string expected_val = "one";
 		std::string expected_remainder = "two;three;";
-		auto result_val = Unittest::get_next_token(serialized_str);
+		auto result_val = Unittest::_task_internal_get_next_token(serialized_str);
 		if(result_val != expected_val || serialized_str != expected_remainder) {
 			print_error("get_next_token() (Task internal)", expected_val + " (value)", result_val + " (value)");
 			print_error("get_next_token() (Task internal)", expected_remainder + " (remainder)", serialized_str + " (remainder)");

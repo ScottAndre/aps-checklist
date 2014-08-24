@@ -141,7 +141,7 @@ std::string get_next_token(std::string &serialized_task) {
 
 #ifdef UNIT_TEST
 
-std::string Unittest::get_next_token(std::string &serialized_task) {
+std::string Unittest::_task_internal_get_next_token(std::string &serialized_task) {
 	return get_next_token(serialized_task);
 }
 
