@@ -65,6 +65,7 @@ private:
 #ifdef UNIT_TEST
 namespace Unittest {
 	std::string _task_internal_get_next_token(std::string &serialized_task);
+	std::string _task_internal_escape_delimiter(const std::string &str);
 }
 #endif
 

@@ -67,17 +67,17 @@ void date_unittest() {
 }
 
 void task_unittest() {
-	Task n_test_task("Testing", false);          // Non-recurring task
-	Task i_test_task("Testing", "MTWRF", false); // Periodically recurring task
-	Task p_test_task("Testing", 2, false);       // Intervallically recurring task
+	Task n_test_task("Testing;", false);          // Non-recurring task
+	Task p_test_task("Testing", "MTWRF", false); // Periodically recurring task
+	Task i_test_task("Testing", 2, false);       // Intervallically recurring task
 	
 
 	/* Serialization tests */
 
 	// Test get_next_token()
 	[]() {
-		std::string serialized_str = "one;two;three;";
-		std::string expected_val = "one";
+		std::string serialized_str = "on\\;e;two;three;";
+		std::string expected_val = "on\\;e";
 		std::string expected_remainder = "two;three;";
 		auto result_val = Unittest::_task_internal_get_next_token(serialized_str);
 		if(result_val != expected_val || serialized_str != expected_remainder) {
@@ -86,7 +86,33 @@ void task_unittest() {
 		}
 	}();
 
+	// Test escape_delimiter()
+	[]() {
+		std::string str = "whee;whee;yeehaw;;";
+		std::string expected = "whee\\;whee\\;yeehaw\\;\\;";
+		auto result = Unittest::_task_internal_escape_delimiter(str);
+		if(result != expected) {
+			print_error("escape_delimiter() (Task internal)", expected, result);
+		}
+	}();
+
 	// Task::serialize()
+	[&n_test_task, &i_test_task, &p_test_task]() {
+		Date today;
+		std::string n_expected = "Testing\;;" + std::to_string(today.get_raw_time()) + ";0;0;0;";
+		std::string i_expected = "Testing;" + std::to_string(today.get_raw_time()) + ";1;2;0;0;";
+		std::string p_expected = "Testing;" + std::to_string(today.get_raw_time()) + ";2;MTWRF;0;0;";
+		auto n_result = n_test_task.serialize();
+		auto i_result = i_test_task.serialize();
+		auto p_result = p_test_task.serialize();
+		if(n_result != n_expected) 
+			print_error("Task::serialize() (r = none)", n_expected, n_result);
+		if(i_result != i_expected)
+			print_error("Task::serialize() (r = intervallic)", i_expected, i_result);
+		if(p_result != p_expected)
+			print_error("Task::serialize() (r = periodic)", p_expected, p_result);
+	}();
+
 
 	// Task::deserialize()
 }
