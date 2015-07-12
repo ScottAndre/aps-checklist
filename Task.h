@@ -1,7 +1,7 @@
 /* Checklist
  * Task.h
  *
- * Copyright Scott Andre 2014
+ * Copyright Scott Andre 2015
  */
 
 #ifndef CHECKLIST_TASK
@@ -24,9 +24,9 @@ enum Weekday {
 
 class Task {
 public:
-	Task(std::string task, bool p);
-	Task(std::string task, const std::string r_period, bool p);
-	Task(std::string task, int r_interval, bool p);
+	Task(std::string task, bool p = false, Date d = Date());
+	Task(std::string task, int r_interval, bool p = false, Date d = Date());
+	Task(std::string task, const char *r_period, bool p = false, Date d = Date());
 	~Task() {}
 
 	Task(const Task &t);
@@ -46,7 +46,7 @@ public:
 
 	void update(); // for recurring tasks, updates the Task's date to the next occurence
 
-	void set_recurrence(const std::string period); // set periodic recurrence for a task. Throws an error if _recurrence != periodic
+	void set_recurrence(const char *period); // set periodic recurrence for a task. Throws an error if _recurrence != periodic
 	void set_recurrence(int interval); // set interval recurrence for a task. Throws an error if _recurrence != intervallic
 
 	std::string serialize();

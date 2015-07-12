@@ -1,7 +1,7 @@
 /* Checklist
  * main.cpp
  *
- * Copyright Scott Andre, 2014
+ * Copyright Scott Andre, 2015
  */
 
 #include <iostream>
@@ -20,9 +20,9 @@ void read_tasks(std::vector<Task> &);
 void write_tasks(const std::vector<Task> &);
 
 void construct_test_tasks(std::vector<Task> &task_list) {
-	Task one("Bake a cake", false);
-	Task two("Slaughter your enemies admist merriment and laughter", false);
-	Task three("Bake another cake", false);
+	Task one("Bake a cake");
+	Task two("Slaughter your enemies admist merriment and laughter");
+	Task three("Bake another cake");
 
 	task_list = { one, two, three };
 }

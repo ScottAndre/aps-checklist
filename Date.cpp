@@ -1,7 +1,7 @@
 /* Checklist
  * Date.cpp
  *
- * Copyright Scott Andre 2014
+ * Copyright Scott Andre 2015
  */
 
 #include <cstdlib>
@@ -38,6 +38,10 @@ Date::Date(time_t t)
 std::string Date::to_string() const {
 	char container[32];
 	auto str_size = std::strftime(container, sizeof(container), "%A, %d %B %Y", localtime(&_time));
+	if(str_size == 0) {
+		std::cout << "strftime failed in Date::to_string().";
+		std::exit(EXIT_FAILURE);
+	}
 	std::string str_representation(container);
 	return str_representation;
 }

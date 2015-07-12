@@ -1,7 +1,7 @@
 /* Checklist
  * Date.h
  *
- * Copyright Scott Andre 2014
+ * Copyright Scott Andre 2015
  */
 
 #ifndef CHECKLIST_DATE

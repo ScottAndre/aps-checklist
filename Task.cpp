@@ -1,7 +1,7 @@
 /* Checklist
  * Task.cpp
  *
- * Copyright Scott Andre 2014
+ * Copyright Scott Andre 2015
  */
 
 #include <utility>
@@ -9,27 +9,18 @@
 
 #include "Task.h"
 
-Task::Task(std::string task, bool p)
-:_task(std::move(task)), _recurrence(none), _persistent(p), _complete(false), _recurrence_interval(0) {
-	Date now;
-	_date = std::move(now);
-
+Task::Task(std::string task, bool p, Date d)
+:_task(task), _date(d), _recurrence(none), _persistent(p), _complete(false), _recurrence_interval(0) {
 	_recurrence_period = {};
 }
 
-Task::Task(std::string task, std::string r_period, bool p)
-:_task(std::move(task)), _recurrence(periodic), _persistent(p), _complete(false), _recurrence_interval(0) {
-	Date now;
-	_date = std::move(now);
-
+Task::Task(std::string task, const char *r_period, bool p, Date d)
+:_task(task), _date(d), _recurrence(periodic), _persistent(p), _complete(false), _recurrence_interval(0) {
 	set_recurrence(r_period);
 }
 
-Task::Task(std::string task, int r_interval, bool p)
-:_task(std::move(task)), _recurrence(intervallic), _persistent(p), _complete(false) {
-	Date now;
-	_date = std::move(now);
-
+Task::Task(std::string task, int r_interval, bool p, Date d)
+:_task(task), _date(d), _recurrence(intervallic), _persistent(p), _complete(false) {
 	set_recurrence(r_interval);
 	_recurrence_period = {};
 }
@@ -76,12 +67,12 @@ void Task::update() {
 }
 
 // Accepts a string in the form "MTWRFSU" where each character indicates a day on which the task should recur
-void Task::set_recurrence(const std::string period) {
+void Task::set_recurrence(const char *period) {
 	if(_recurrence != periodic) {
 		std::cerr << "Warning: setting recurrence period on a non-periodic task\n";
 	} // bad things happen
 
-	for(char day : period) {
+	for(char day : std::string(period)) {
 		switch(day) {
 			case 'M':
 			case 'm':
@@ -171,6 +162,8 @@ std::string get_next_token(std::string &serialized_task) {
 		serialized_task = std::move(remainder);
 		return token;
 	}
+
+	return "";
 }
 
 std::string escape_delimiter(const std::string &str) {

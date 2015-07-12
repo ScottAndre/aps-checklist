@@ -3,7 +3,7 @@
  *
  * Do not compile in release product.
  *
- * Copyright Scott Andre 2014
+ * Copyright Scott Andre 2015
  */
 
 #include <iostream>
@@ -30,8 +30,8 @@ int main(int argc, char ** argv) {
 template<typename A, typename B>
 void print_error(std::string test_name, A expected, B result) {
 	std::cerr << "\033[91mFailed test of " << test_name << "\n" <<
-		"\033[32mExpected value: \033[0m" << expected << "\n" <<
-		"\033[31mActual value was: \033[0m" << result << "\n\n";
+	    "\033[32mExpected value:   \033[0m" << expected << "\n" <<
+	    "\033[31mActual value was: \033[0m" << result << "\n\n";
 }
 
 void date_unittest() {
@@ -67,9 +67,9 @@ void date_unittest() {
 }
 
 void task_unittest() {
-	Task n_test_task("Testing;", false);          // Non-recurring task
-	Task p_test_task("Testing", "MTWRF", false); // Periodically recurring task
-	Task i_test_task("Testing", 2, false);       // Intervallically recurring task
+	Task n_test_task("Testing;");          // Non-recurring task
+	Task p_test_task("Testing", "MTWRF");  // Periodically recurring task
+	Task i_test_task("Testing", 2);        // Intervallically recurring task
 	
 
 	/* Serialization tests */
@@ -99,7 +99,7 @@ void task_unittest() {
 	// Task::serialize()
 	[&n_test_task, &i_test_task, &p_test_task]() {
 		Date today;
-		std::string n_expected = "Testing\;;" + std::to_string(today.get_raw_time()) + ";0;0;0;";
+		std::string n_expected = "Testing\\;;" + std::to_string(today.get_raw_time()) + ";0;0;0;";
 		std::string i_expected = "Testing;" + std::to_string(today.get_raw_time()) + ";1;2;0;0;";
 		std::string p_expected = "Testing;" + std::to_string(today.get_raw_time()) + ";2;MTWRF;0;0;";
 		auto n_result = n_test_task.serialize();
@@ -112,7 +112,6 @@ void task_unittest() {
 		if(p_result != p_expected)
 			print_error("Task::serialize() (r = periodic)", p_expected, p_result);
 	}();
-
 
 	// Task::deserialize()
 }
