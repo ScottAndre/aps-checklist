@@ -1,7 +1,7 @@
 /* Checklist
  * Task.h
  *
- * Copyright Scott Andre 2015
+ * Created by Scott Andre
  */
 
 #ifndef CHECKLIST_TASK
@@ -22,18 +22,34 @@ enum Weekday {
 	Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 };
 
+struct Task_core {
+	int id;
+	std::string task;
+	time_t date;
+	int recurrence;
+	int recurrence_interval;
+	std::string recurrence_period;
+	bool persistent;
+	bool complete;
+};
+
 class Task {
 public:
-	Task(std::string task, bool p = false, Date d = Date());
-	Task(std::string task, int r_interval, bool p = false, Date d = Date());
-	Task(std::string task, const char *r_period, bool p = false, Date d = Date());
-	~Task() {}
+	Task(const std::string &task, bool p = false, Date d = Date());
+	Task(const std::string &task, int r_interval, bool p = false, Date d = Date());
+	Task(const std::string &task, const char *r_period, bool p = false, Date d = Date());
+	Task(const std::string &task, const std::string &r_period, bool p = false, Date d = Date());
 
 	Task(const Task &t);
 	Task(Task &&t);
 
+	~Task() {}
+
 	Task &operator=(const Task &t);
 	Task &operator=(Task &&t);
+
+	bool operator==(const Task &t);
+	bool operator!=(const Task &t);
 
 	const std::string get() const { return _task; }
 
@@ -46,13 +62,16 @@ public:
 
 	void update(); // for recurring tasks, updates the Task's date to the next occurence
 
-	void set_recurrence(const char *period); // set periodic recurrence for a task. Throws an error if _recurrence != periodic
+	void set_recurrence(const std::string &period); // set periodic recurrence for a task. Throws an error if _recurrence != periodic
 	void set_recurrence(int interval); // set interval recurrence for a task. Throws an error if _recurrence != intervallic
 
-	std::string serialize();
-	static Task deserialize(std::string serialized_task);
+	Task_core core() const;
+	static Task reconstruct(const Task_core &core);
+
+	bool exists_in_database() const;
 
 private:
+	int _id;
 	std::string _task;
 	Date _date;
 	Recurrence _recurrence;

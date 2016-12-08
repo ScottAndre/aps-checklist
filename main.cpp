@@ -1,7 +1,7 @@
 /* Checklist
  * main.cpp
  *
- * Copyright Scott Andre, 2015
+ * Created by Scott Andre
  */
 
 #include <iostream>
@@ -9,10 +9,13 @@
 #include <clocale>
 #include <vector>
 #include <utility>
-#include <fstream>
 
 #include "Date.h"
 #include "Task.h"
+#include "PGAdaptor.h"
+
+using std::cout;
+using std::endl;
 
 void draw(const std::vector<Task> &);
 
@@ -33,11 +36,25 @@ int main(int argc, char ** argv) {
 
 	setlocale(LC_ALL, "");
 
-	std::vector<Task> task_list;
+	//std::vector<Task> task_list;
 
-	construct_test_tasks(task_list);
+	//construct_test_tasks(task_list);
 
-	draw(task_list);
+	//draw(task_list);
+
+	PGAdaptor pg;
+
+	cout << "Testing retrieving tasks." << endl;
+
+	//Task t("Slaughter your enemies amidst merriment and laughter");
+
+	//bool b = pg.insert_task(t);
+
+	//cout << "Insertion " << (b ? "succeeded" : "failed") << "." << endl;
+
+	auto tasks = pg.retrieve_daily_tasks();
+
+	draw(tasks);
 
 	return 0;
 }
@@ -56,19 +73,4 @@ void draw(const std::vector<Task> &task_list) {
 	for(Task t : task_list) {
 		std::cout << '\t' << u8"\u2611" << u8"\u2610" << ' ' << t.get() << "\n";
 	}
-}
-
-void read_tasks(std::vector<Task> &task_list) {
-	std::ifstream input("~/etc/tasks.dat");
-	if(!input) {
-		std::cout << "Failed to read tasks from file. Initializing with test tasks...\n";
-		construct_test_tasks(task_list);
-	}
-	else {
-		
-	}
-}
-
-void write_tasks(std::vector<Task> &task_list) {
-
 }

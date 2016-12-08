@@ -1,7 +1,7 @@
 /* Checklist
  * Date.h
  *
- * Copyright Scott Andre 2015
+ * Created by Scott Andre
  */
 
 #ifndef CHECKLIST_DATE
@@ -65,12 +65,14 @@ public:
 		return _time >= d._time;
 	}
 
-	void set_time();
-	
 	std::string to_string() const;
 
 	time_t get_raw_time() const { return _time; }
+	time_t localtime() const;
 	std::string get_day() const;
+
+	static std::string to_db_representation(time_t t);
+	static Date from_db_representation(std::string s);
 
 private:
 	time_t _time;

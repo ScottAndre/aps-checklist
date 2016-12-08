@@ -1,7 +1,7 @@
 /* Checklist
  * Task.cpp
  *
- * Copyright Scott Andre 2015
+ * Created by Scott Andre
  */
 
 #include <utility>
@@ -9,32 +9,38 @@
 
 #include "Task.h"
 
-Task::Task(std::string task, bool p, Date d)
-:_task(task), _date(d), _recurrence(none), _persistent(p), _complete(false), _recurrence_interval(0) {
+Task::Task(const std::string &task, bool p, Date d)
+:_id(-1), _task(task), _date(d), _recurrence(none), _recurrence_interval(0), _persistent(p), _complete(false) {
 	_recurrence_period = {};
 }
 
-Task::Task(std::string task, const char *r_period, bool p, Date d)
-:_task(task), _date(d), _recurrence(periodic), _persistent(p), _complete(false), _recurrence_interval(0) {
+Task::Task(const std::string &task, const char *r_period, bool p, Date d)
+:_id(-1), _task(task), _date(d), _recurrence(periodic), _recurrence_interval(0), _persistent(p), _complete(false) {
+	set_recurrence(std::string(r_period));
+}
+
+Task::Task(const std::string &task, const std::string &r_period, bool p, Date d)
+:_id(-1), _task(task), _date(d), _recurrence(periodic), _recurrence_interval(0), _persistent(p), _complete(false) {
 	set_recurrence(r_period);
 }
 
-Task::Task(std::string task, int r_interval, bool p, Date d)
-:_task(task), _date(d), _recurrence(intervallic), _persistent(p), _complete(false) {
+Task::Task(const std::string &task, int r_interval, bool p, Date d)
+:_id(-1), _task(task), _date(d), _recurrence(intervallic), _persistent(p), _complete(false) {
 	set_recurrence(r_interval);
 	_recurrence_period = {};
 }
 
 Task::Task(const Task &t)
-:_task(t._task), _date(t._date), _recurrence(t._recurrence), _recurrence_interval(t._recurrence_interval),
+:_id(t._id), _task(t._task), _date(t._date), _recurrence(t._recurrence), _recurrence_interval(t._recurrence_interval),
 	_recurrence_period(t._recurrence_period), _persistent(t._persistent), _complete(t._complete) {}
 
 Task::Task(Task &&t)
-:_task(std::move(t._task)), _date(std::move(t._date)), _recurrence(t._recurrence), _recurrence_interval(t._recurrence_interval),
+:_id(std::move(t._id)), _task(std::move(t._task)), _date(std::move(t._date)), _recurrence(t._recurrence), _recurrence_interval(t._recurrence_interval),
 	_recurrence_period(std::move(t._recurrence_period)), _persistent(t._persistent), _complete(t._complete) {}
 
 Task &Task::operator=(const Task &t) {
 	if(this == &t) return *this;
+	_id = t._id;
 	_task = t._task;
 	_date = t._date;
 	_recurrence = t._recurrence;
@@ -47,6 +53,7 @@ Task &Task::operator=(const Task &t) {
 
 Task &Task::operator=(Task &&t) {
 	if(this == &t) return *this;
+	_id = std::move(t._id);
 	_task = std::move(t._task);
 	_date = std::move(t._date);
 	_recurrence = t._recurrence;
@@ -55,6 +62,20 @@ Task &Task::operator=(Task &&t) {
 	_persistent = t._persistent;
 	_complete = t._complete;
 	return *this;
+}
+
+bool Task::operator==(const Task &t) {
+	return _task == t._task
+	    && _date == t._date
+	    && _recurrence == t._recurrence
+	    && _recurrence_interval == t._recurrence_interval
+	    && _recurrence_period == t._recurrence_period
+	    && _persistent == t._persistent
+	    && _complete == t._complete;
+}
+
+bool Task::operator!=(const Task &t) {
+	return !(*this == t);
 }
 
 void Task::update() {
@@ -67,12 +88,12 @@ void Task::update() {
 }
 
 // Accepts a string in the form "MTWRFSU" where each character indicates a day on which the task should recur
-void Task::set_recurrence(const char *period) {
+void Task::set_recurrence(const std::string &period) {
 	if(_recurrence != periodic) {
 		std::cerr << "Warning: setting recurrence period on a non-periodic task\n";
 	} // bad things happen
 
-	for(char day : std::string(period)) {
+	for(char day : period) {
 		switch(day) {
 			case 'M':
 			case 'm':
@@ -107,76 +128,45 @@ void Task::set_recurrence(int interval) {
 	_recurrence_interval = interval;
 }
 
-std::string get_next_token(std::string &);
-std::string escape_delimiter(const std::string &);
 std::string serialize_recurrence_period(const std::vector<Weekday> &);
-char delimiter = ';';
 
-std::string Task::serialize() {
-	std::stringstream serialized_task;
-	
-	serialized_task << escape_delimiter(_task) << delimiter
-		<< _date.get_raw_time() << delimiter
-		<< _recurrence << delimiter;
+Task_core Task::core() const {
+	Task_core core;
+	core.id = _id;
+	core.task = _task;
+	core.date = _date.get_raw_time();
+	core.recurrence = (int)_recurrence;
+	core.recurrence_interval = _recurrence_interval;
+	core.recurrence_period = serialize_recurrence_period(_recurrence_period);
+	core.persistent = _persistent;
+	core.complete = _complete;
 
-	switch(_recurrence) {
+	return core;
+}
+
+Task Task::reconstruct(const Task_core &core) {
+	// must be a pointer, otherwise it attempts to call default constructor, and Task doesn't have one
+	Task *new_task;
+	switch((Recurrence)core.recurrence) {
 		case intervallic:
-			serialized_task << _recurrence_interval << delimiter; break;
+			new_task = new Task(core.task, core.recurrence_interval, core.persistent, Date(core.date)); break;
 		case periodic:
-			serialized_task << serialize_recurrence_period(_recurrence_period) << delimiter; break;
+			new_task = new Task(core.task, core.recurrence_period, core.persistent, Date(core.date)); break;
 		default:
-			break;
-			// do nothing
+			new_task = new Task(core.task, core.persistent, Date(core.date)); break;
 	}
 
-	serialized_task << _persistent << delimiter
-		<< _complete << delimiter;
+	Task reconstructed_task = *new_task;
+	delete new_task;
 
-	return serialized_task.str();
+	reconstructed_task._id = core.id;
+	reconstructed_task._complete = core.complete;
+
+	return reconstructed_task;
 }
 
-Task Task::deserialize(std::string serialized_task) {
-	auto task = get_next_token(serialized_task);
-	// undo the escape of delimiter character
-	auto pos = 0;
-	do { 
-		pos = task.find("\\" + delimiter, pos);
-		if(pos != std::string::npos) {
-			task.replace(pos, 2, std::to_string(delimiter));
-		}
-	} while(pos != std::string::npos);
-
-	// cannot implement deserialize until Tasks implement constructors for varying Dates (_date is not automatically set to day of creation)
-
-}
-
-// gets the next value of a serialized task. If no more values, returns ""
-std::string get_next_token(std::string &serialized_task) {
-	
-	for(auto it = serialized_task.begin(); it != serialized_task.end(); it++) {
-		if(*it != delimiter) continue;
-		if(it != serialized_task.begin() && *(it - 1) == '\\') continue;
-
-		std::string token(serialized_task.begin(), it);
-		std::string remainder(it + 1, serialized_task.end());
-		serialized_task = std::move(remainder);
-		return token;
-	}
-
-	return "";
-}
-
-std::string escape_delimiter(const std::string &str) {
-	std::stringstream escaped_str;
-
-	for(auto it = str.begin(); it != str.end(); it++) {
-		if(*it == delimiter) {
-			escaped_str << "\\";
-		}
-		escaped_str << *it;
-	}
-
-	return escaped_str.str();
+bool Task::exists_in_database() const {
+	return _id != -1;
 }
 
 std::string serialize_recurrence_period(const std::vector<Weekday> &period) {
@@ -206,15 +196,3 @@ std::string serialize_recurrence_period(const std::vector<Weekday> &period) {
 
 	return serialized_period.str();
 }
-
-#ifdef UNIT_TEST
-
-std::string Unittest::_task_internal_get_next_token(std::string &serialized_task) {
-	return get_next_token(serialized_task);
-}
-
-std::string Unittest::_task_internal_escape_delimiter(const std::string &str) {
-	return escape_delimiter(str);
-}
-
-#endif
