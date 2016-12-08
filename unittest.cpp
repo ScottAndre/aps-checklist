@@ -3,11 +3,12 @@
  *
  * Do not compile in release product.
  *
- * Copyright Scott Andre 2015
+ * Created by Scott Andre
  */
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include "Date.h"
 #include "Task.h"
@@ -37,7 +38,7 @@ void print_error(std::string test_name, A expected, B result) {
 void date_unittest() {
 	Date test_date(88888);
 
-	// Test Date::to_string()	
+	// Date::to_string()	
 	[&test_date]() {
 		std::string expected = "Friday, 02 January 1970";
 		auto result = test_date.to_string();
@@ -46,7 +47,7 @@ void date_unittest() {
 		}
 	}();
 
-	// Test Date::get_day()
+	// Date::get_day()
 	[&test_date]() {
 		std::string expected = "Friday";
 		auto result = test_date.get_day();
@@ -55,67 +56,134 @@ void date_unittest() {
 		}
 	}();
 
-	// Test Date::set_time() - should have automatically run when test_date was created
+	// Date::localtime()
 	[&test_date]() {
-		std::cerr << "Note to self, your set_time() test needs to somehow account for time difference\n";
+		std::cerr << "Note to self, your localtime() test needs to somehow account for time difference\n";
 		time_t expected = 86400;
-		auto result = test_date.get_raw_time();
+		auto result = test_date.localtime();
 		if(result != expected) {
-			print_error("Date::set_time()", expected, result);
+			print_error("Date::localtime()", expected, result);
 		}
 	}();
 }
 
+std::string core_to_string(Task_core);
+bool operator!=(Task_core, Task_core);
+
 void task_unittest() {
-	Task n_test_task("Testing;");          // Non-recurring task
-	Task p_test_task("Testing", "MTWRF");  // Periodically recurring task
-	Task i_test_task("Testing", 2);        // Intervallically recurring task
+	Date test_date;
+
+	Task n_test_task("Testing", true, test_date);           // Non-recurring, persistent task
+	Task p_test_task("Testing", "MTWRF", false, test_date); // Periodically recurring task
+	Task i_test_task("Testing", 2, false, test_date);       // Intervallically recurring task
 	
 
-	/* Serialization tests */
+	/* Task persistence tests */
 
-	// Test get_next_token()
-	[]() {
-		std::string serialized_str = "on\\;e;two;three;";
-		std::string expected_val = "on\\;e";
-		std::string expected_remainder = "two;three;";
-		auto result_val = Unittest::_task_internal_get_next_token(serialized_str);
-		if(result_val != expected_val || serialized_str != expected_remainder) {
-			print_error("get_next_token() (Task internal)", expected_val + " (value)", result_val + " (value)");
-			print_error("get_next_token() (Task internal)", expected_remainder + " (remainder)", serialized_str + " (remainder)");
+	// Task::core()
+	[&n_test_task, &p_test_task, &i_test_task, &test_date]() {
+		Task_core n_expected;
+		n_expected.id = -1;
+		n_expected.task = "Testing";
+		n_expected.date = test_date.get_raw_time();
+		n_expected.recurrence = 0;
+		n_expected.recurrence_interval = 0;
+		n_expected.recurrence_period = "";
+		n_expected.persistent = true;
+		n_expected.complete = false;
+
+		Task_core n_result = n_test_task.core();
+
+		Task_core p_expected;
+		p_expected.id = -1;
+		p_expected.task = "Testing";
+		p_expected.date = test_date.get_raw_time();
+		p_expected.recurrence = 2;
+		p_expected.recurrence_interval = 0;
+		p_expected.recurrence_period = "MTWRF";
+		p_expected.persistent = false;
+		p_expected.complete = false;
+
+		Task_core p_result = p_test_task.core();
+
+		Task_core i_expected;
+		i_expected.id = -1;
+		i_expected.task = "Testing";
+		i_expected.date = test_date.get_raw_time();
+		i_expected.recurrence = 1;
+		i_expected.recurrence_interval = 2;
+		i_expected.recurrence_period = "";
+		i_expected.persistent = false;
+		i_expected.complete = false;
+
+		Task_core i_result = i_test_task.core();
+
+		if(n_result != n_expected) {
+			print_error("Task::core()", core_to_string(n_expected), core_to_string(n_result));
+		}
+		if(p_result != p_expected) {
+			print_error("Task::core()", core_to_string(p_expected), core_to_string(p_result));
+		}
+		if(i_result != i_expected) {
+			print_error("Task::core()", core_to_string(i_expected), core_to_string(i_result));
 		}
 	}();
 
-	// Test escape_delimiter()
-	[]() {
-		std::string str = "whee;whee;yeehaw;;";
-		std::string expected = "whee\\;whee\\;yeehaw\\;\\;";
-		auto result = Unittest::_task_internal_escape_delimiter(str);
-		if(result != expected) {
-			print_error("escape_delimiter() (Task internal)", expected, result);
+	// Task::reconstruct()
+	[&n_test_task, &p_test_task, &i_test_task]() {
+		Task_core n_core = n_test_task.core();
+		Task_core p_core = p_test_task.core();
+		Task_core i_core = i_test_task.core();
+
+		Task n_result = Task::reconstruct(n_core);
+		Task p_result = Task::reconstruct(p_core);
+		Task i_result = Task::reconstruct(i_core);
+
+		if(n_result != n_test_task) {
+			print_error("Task::reconstruct()", core_to_string(n_core), core_to_string(n_result.core()));
+		}
+		if(p_result != p_test_task) {
+			print_error("Task::reconstruct()", core_to_string(p_core), core_to_string(p_result.core()));
+		}
+		if(i_result != i_test_task) {
+			print_error("Task::reconstruct()", core_to_string(i_core), core_to_string(i_result.core()));
 		}
 	}();
 
-	// Task::serialize()
-	[&n_test_task, &i_test_task, &p_test_task]() {
-		Date today;
-		std::string n_expected = "Testing\\;;" + std::to_string(today.get_raw_time()) + ";0;0;0;";
-		std::string i_expected = "Testing;" + std::to_string(today.get_raw_time()) + ";1;2;0;0;";
-		std::string p_expected = "Testing;" + std::to_string(today.get_raw_time()) + ";2;MTWRF;0;0;";
-		auto n_result = n_test_task.serialize();
-		auto i_result = i_test_task.serialize();
-		auto p_result = p_test_task.serialize();
-		if(n_result != n_expected) 
-			print_error("Task::serialize() (r = none)", n_expected, n_result);
-		if(i_result != i_expected)
-			print_error("Task::serialize() (r = intervallic)", i_expected, i_result);
-		if(p_result != p_expected)
-			print_error("Task::serialize() (r = periodic)", p_expected, p_result);
-	}();
-
-	// Task::deserialize()
 }
 
 void main_unittest() {
 
+}
+
+/* Helpers */
+
+bool operator==(Task_core c1, Task_core c2) {
+	return (c1.id == c2.id &&
+	        c1.task == c2.task &&
+	        c1.date == c2.date &&
+	        c1.recurrence == c2.recurrence &&
+	        c1.recurrence_interval == c2.recurrence_interval &&
+	        c1.recurrence_period == c2.recurrence_period &&
+	        c1.persistent == c2.persistent &&
+	        c1.complete == c2.complete);
+}
+
+bool operator!=(Task_core c1, Task_core c2) {
+	return !(c1 == c2);
+}
+
+std::string core_to_string(Task_core core) {
+	std::stringstream result;
+	result << "{" <<
+		"\n\tid: " << core.id <<
+		"\n\ttask: " << core.task <<
+		"\n\tdate: " << core.date <<
+		"\n\trecurrence: " << core.recurrence <<
+		"\n\trecurrence_interval: " << core.recurrence_interval <<
+		"\n\trecurrence_period: " << core.recurrence_period <<
+		"\n\tpersistent: " << core.persistent <<
+		"\n\tcomplete: " << core.complete <<
+		"\n}\n";
+	return result.str();
 }

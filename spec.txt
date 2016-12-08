@@ -36,3 +36,18 @@ time-check:
 	checks the time once per minute
 	keeps track of the current day
 	
+
+
+--- NEW ---
+
+So, I have a better idea. No need for multithreaded implementation.
+If checklist is called without arguments, it prints a list of active tasks, and quits.
+Active tasks are defined as any tasks occurring on the current day. Persistent and recurring tasks have their dates periodically updated to remain active. Complete tasks are still active, they are displayed below incomplete tasks so that you can see what you have accomplished today.
+If called with a special command, "add", "remove", "update", "complete", "incomplete", it performs the required database operation and exits.
+
+When checklist is called without arguments, it may also perform cleanup. checklist stores the last date it performed cleanup in the database, and checks this date on startup. If the date of last cleanup is older than the current date, checklist will perform cleanup.
+Cleanup does the following things:
+It queries the database for persistent, incomplete tasks with dates older than the current date. It updates the dates of said tasks to be the current date (so that the tasks stay active).
+It queries the database for recurring tasks with dates older than the current date. It updates the dates of said tasks to their next occurrence, and marks them incomplete.
+	For intervallic tasks, this is as easy as adding the interval to the day count of the task's date (though this will play weird with persistent tasks - consider a way to do this better. May need separate logic for tasks that are both recurring and persistent).
+	For periodic tasks, get the weekday based on the date they currently have. Look up the next weekday in their period (through a straight scan of the period), and add the difference (modulo 7) to the day count of the task's date.
