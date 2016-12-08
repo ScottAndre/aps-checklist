@@ -47,8 +47,12 @@ bool PGAdaptor::insert_task(Task &t) {
 
 		pqxx::work transaction(connection, "InsertNewTask");
 		Task_core core = t.core();
-		pqxx::result new_id = transaction.prepared("insert")(core.task)(Date::to_db_representation(core.date))(core.recurrence)(core.recurrence_interval)(core.recurrence_period)(core.persistent)(core.complete).exec();
-		transaction.commit(); // TODO: get last insert ID and set t.id to that
+		pqxx::result ret_val = transaction.prepared("insert")(core.task)(Date::to_db_representation(core.date))(core.recurrence)(core.recurrence_interval)(core.recurrence_period)(core.persistent)(core.complete).exec();
+		auto ret_row = ret_val.front(); // update the Task's ID so that future saves properly update the task rather than inserting it again
+		int id;
+		ret_row["id"] >> id;
+		t._id = id;
+		transaction.commit();
 		return true;
 	}
 	catch(pqxx::sql_error &e) { // also what exceptions to catch?

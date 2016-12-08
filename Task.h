@@ -34,6 +34,8 @@ struct Task_core {
 };
 
 class Task {
+friend class PGAdaptor; //TODO: ideally we'd like to move towards using friendship between this and PGAdaptor rather than Task core, since anyone can make a Task core.
+
 public:
 	Task(const std::string &task, bool p = false, Date d = Date());
 	Task(const std::string &task, int r_interval, bool p = false, Date d = Date());

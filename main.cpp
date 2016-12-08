@@ -44,17 +44,25 @@ int main(int argc, char ** argv) {
 
 	PGAdaptor pg;
 
-	cout << "Testing retrieving tasks." << endl;
+	cout << "Testing inserting tasks." << endl;
 
-	//Task t("Slaughter your enemies amidst merriment and laughter");
+	Task t("Slaughter your enemies amidst merriment and laughter");
 
-	//bool b = pg.insert_task(t);
+	bool b = pg.insert_task(t);
 
-	//cout << "Insertion " << (b ? "succeeded" : "failed") << "." << endl;
+	cout << "Insertion " << (b ? "succeeded" : "failed") << "." << endl;
 
-	auto tasks = pg.retrieve_daily_tasks();
+	Task_core c = t.core();
 
-	draw(tasks);
+	cout << "New ID: " << c.id << endl;
+
+	//auto tasks = pg.retrieve_daily_tasks();
+
+	//draw(tasks);
+
+	//Task t = tasks[0];
+
+	//pg.delete_task(t);
 
 	return 0;
 }
