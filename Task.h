@@ -22,17 +22,6 @@ enum Weekday {
 	Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 };
 
-struct Task_core {
-	int id;
-	std::string task;
-	time_t date;
-	int recurrence;
-	int recurrence_interval;
-	std::string recurrence_period;
-	bool persistent;
-	bool complete;
-};
-
 class Task {
 friend class PGAdaptor; //TODO: ideally we'd like to move towards using friendship between this and PGAdaptor rather than Task core, since anyone can make a Task core.
 
@@ -53,22 +42,24 @@ public:
 	bool operator==(const Task &t);
 	bool operator!=(const Task &t);
 
-	const std::string get() const { return _task; }
+	const std::string desc() const { return _task; }
+	const int id() const { return _id; }
 
 	void mark_complete() { _complete = true; }
 	void mark_incomplete() { _complete = false; }
 
-	bool is_complete() const { return _complete; }
-	bool is_recurring() const { return _recurrence != none; }
-	bool is_persistent() const { return _persistent; }
+	bool complete() const { return _complete; }
+	bool recurring() const { return _recurrence != none; }
+	bool persistent() const { return _persistent; }
+
+	Date date() const { return _date; }
 
 	void update(); // for recurring tasks, updates the Task's date to the next occurence
 
 	void set_recurrence(const std::string &period); // set periodic recurrence for a task. Throws an error if _recurrence != periodic
 	void set_recurrence(int interval); // set interval recurrence for a task. Throws an error if _recurrence != intervallic
 
-	Task_core core() const;
-	static Task reconstruct(const Task_core &core);
+	static std::string serialize_recurrence_period(const std::vector<Weekday> &);
 
 	bool exists_in_database() const;
 
@@ -82,12 +73,5 @@ private:
 	bool _persistent;
 	bool _complete;
 };
-
-#ifdef UNIT_TEST
-namespace Unittest {
-	std::string _task_internal_get_next_token(std::string &serialized_task);
-	std::string _task_internal_escape_delimiter(const std::string &str);
-}
-#endif
 
 #endif

@@ -3,7 +3,6 @@ DIRECTIVES =# -D_GLIBCXX_USE_CXX11_ABI=0 # Needed for gcc 5 because of incompati
 CFLAGS = -g -Wall --std=c++14 $(DIRECTIVES)
 LIBS = -lpqxx -lpq
 
-TODIR = obj_test
 ODIR = obj
 
 OCOMPILE = $(CC) $(CFLAGS) -o $@ -c
@@ -25,25 +24,10 @@ $(ODIR)/main.o : main.cpp Date.h Task.h
 $(ODIR)/PGAdaptor.o : PGAdaptor.cpp PGAdaptor.h BaseDBAdaptor.h Task.h
 	$(OCOMPILE) PGAdaptor.cpp
 
-# Test build (unfortunately make doesn't offer a way to eliminate the repetition in rules. Look at CMake perhaps)
-
-$(TODIR)/Task.o : Task.h Task.cpp Date.h
-	$(OCOMPILE) Task.cpp
-
-$(TODIR)/Date.o : Date.h Date.cpp
-	$(OCOMPILE) Date.cpp
-
-$(TODIR)/unittest.o : unittest.cpp Date.h Task.h
-	$(OCOMPILE) unittest.cpp
-
-test : CFLAGS := -D UNIT_TEST $(CFLAGS)
-test : $(TODIR)/Date.o $(TODIR)/Task.o $(TODIR)/unittest.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
-
 .PHONY : clean setup
 
 setup :
 	mkdir $(ODIR) $(TODIR)
 
 clean :
-	rm -f $(ODIR)/*.o $(TODIR)/*.o
+	rm -f $(ODIR)/*.o

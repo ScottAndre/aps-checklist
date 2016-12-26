@@ -11,6 +11,16 @@
 
 #include "Date.h"
 
+void init_tm(std::tm *time, unsigned int year, unsigned int month, unsigned int day) {
+	time->tm_sec = 0;
+	time->tm_min = 0;
+	time->tm_hour = 12; // gives us some wiggle room
+	time->tm_mday = day;
+	time->tm_mon = month - 1; // months since January: 0 - 11
+	time->tm_year = year - 1900; // years since 1900
+	time->tm_isdst = -1; // forces mktime to try to autodetect Daylight savings Time, not that it really matters for our purposes
+}
+
 /* TODO: is this function even necessary? this looks like the ravings of a madman */
 time_t Date::localtime() const {
 	uint32_t one_day_in_s = 86400;
@@ -29,6 +39,19 @@ time_t Date::localtime() const {
 
 Date::Date()
 :_time(std::time(NULL)) {}
+
+Date::Date(std::string s) {
+	// accepts date string formatted as MM/DD/YY
+	std::tm time;
+	unsigned int year;
+	unsigned int month;
+	unsigned int day;
+	std::sscanf(s.c_str(), "%u/%u/%u", &month, &day, &year);
+	if(year < 100)
+		year += 2000; // if year is specified as "17" instead of "2017", for instance. This will need to be updated once every 100 years. What terrible programming practice, hard-coding like that!
+	init_tm(&time, year, month, day);
+	_time = std::mktime(&time);
+}
 
 Date::Date(time_t t)
 :_time(t) {
@@ -68,13 +91,7 @@ Date Date::from_db_representation(std::string s) {
 	unsigned int month;
 	unsigned int day;
 	std::sscanf(s.c_str(), "%u-%u-%u", &year, &month, &day);
-	time.tm_sec = 0;
-	time.tm_min = 0;
-	time.tm_hour = 12; // gives us some wiggle room
-	time.tm_mday = day;
-	time.tm_mon = month;
-	time.tm_year = year;
-	time.tm_isdst = -1; // forces mktime to try to autodetect Daylight savings Time, not that it really matters for our purposes
+	init_tm(&time, year, month, day);
 	Date d(std::mktime(&time));
 	return d;
 }

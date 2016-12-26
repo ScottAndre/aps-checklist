@@ -19,7 +19,7 @@ public:
 	virtual bool insert_task(Task &t) = 0;
 	virtual bool update_task(const Task &t) = 0;
 	virtual bool delete_task(const Task &t) = 0;
-	virtual std::vector<Task> retrieve_daily_tasks() = 0;
+	virtual std::vector<Task> retrieve_active_tasks() = 0;
 };
 
 #endif

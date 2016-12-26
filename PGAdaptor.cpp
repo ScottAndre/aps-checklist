@@ -46,8 +46,7 @@ bool PGAdaptor::insert_task(Task &t) {
 		connection.prepare("insert", insert_stream.str());
 
 		pqxx::work transaction(connection, "InsertNewTask");
-		Task_core core = t.core();
-		pqxx::result ret_val = transaction.prepared("insert")(core.task)(Date::to_db_representation(core.date))(core.recurrence)(core.recurrence_interval)(core.recurrence_period)(core.persistent)(core.complete).exec();
+		pqxx::result ret_val = transaction.prepared("insert")(t._task)(Date::to_db_representation(t._date.get_raw_time()))((int)t._recurrence)(t._recurrence_interval)(Task::serialize_recurrence_period(t._recurrence_period))(t._persistent)(t._complete).exec();
 		auto ret_row = ret_val.front(); // update the Task's ID so that future saves properly update the task rather than inserting it again
 		int id;
 		ret_row["id"] >> id;
@@ -71,8 +70,7 @@ bool PGAdaptor::update_task(const Task &t) {
 		connection.prepare("update", update_stream.str());
 
 		pqxx::work transaction(connection, "UpdateTask");
-		Task_core core = t.core();
-		transaction.prepared("update")(core.task)(Date::to_db_representation(core.date))(core.recurrence)(core.recurrence_interval)(core.recurrence_period)(core.persistent)(core.complete)(core.id).exec();
+		transaction.prepared("update")(t._task)(Date::to_db_representation(t._date.get_raw_time()))((int)t._recurrence)(t._recurrence_interval)(Task::serialize_recurrence_period(t._recurrence_period))(t._persistent)(t._complete)(t._id).exec();
 		transaction.commit();
 		return true;
 	}
@@ -91,8 +89,7 @@ bool PGAdaptor::delete_task(const Task &t) {
 		connection.prepare("delete", delete_stream.str());
 
 		pqxx::work transaction(connection, "DeleteTask");
-		Task_core core = t.core();
-		transaction.prepared("delete")(core.id).exec();
+		transaction.prepared("delete")(t._id).exec();
 		transaction.commit();
 		return true;
 	}
@@ -102,7 +99,7 @@ bool PGAdaptor::delete_task(const Task &t) {
 	}
 }
 
-std::vector<Task> PGAdaptor::retrieve_daily_tasks() {
+std::vector<Task> PGAdaptor::retrieve_active_tasks() {
 	std::vector<Task> tasks_container;
 
 	try {
@@ -116,23 +113,39 @@ std::vector<Task> PGAdaptor::retrieve_daily_tasks() {
 		pqxx::result tasks = transaction.prepared("retrieve").exec();
 
 		for(auto it = tasks.begin(); it != tasks.end(); ++it) {
-			Task_core c;
+			Task *new_task; // must be a pointer, otherwise it attempts to call default constructor, and Task doesn't have one
+			std::string t;
+			int r;
+			int r_i;
+			std::string r_p;
 			std::string d;
+			bool p;
 
 			pqxx::tuple row = *it;
-			row["id"] >> c.id;
-			row["task"] >> c.task;
-			row["date"] >> d;
-			row["recurrence"] >> c.recurrence;
-			row["recurrence_interval"] >> c.recurrence_interval;
-			row["recurrence_period"] >> c.recurrence_period;
-			row["persistent"] >> c.persistent;
-			row["complete"] >> c.complete;
 
-			c.date = Date::from_db_representation(d).get_raw_time();
-			
-			Task t = Task::reconstruct(c);
-			tasks_container.push_back(t);
+			row["task"] >> t;
+			row["date"] >> d;
+			row["recurrence"] >> r;
+			row["recurrence_interval"] >> r_i;
+			row["recurrence_period"] >> r_p;
+			row["persistent"] >> p;
+
+			switch((Recurrence)r) {
+				case intervallic:
+					new_task = new Task(t, r_i, p, Date::from_db_representation(d)); break;
+				case periodic:
+					new_task = new Task(t, r_p, p, Date::from_db_representation(d)); break;
+				default:
+					new_task = new Task(t, p, Date::from_db_representation(d)); break;
+			}
+
+			Task reconstructed_task = *new_task;
+			delete new_task;
+
+			row["id"] >> reconstructed_task._id;
+			row["complete"] >> reconstructed_task._complete;
+
+			tasks_container.push_back(reconstructed_task);
 		}
 
 		transaction.commit();

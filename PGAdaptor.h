@@ -29,7 +29,7 @@ public:
 	bool insert_task(Task &t); // this will set the task's id - which is why it isn't const.
 	bool update_task(const Task &t);
 	bool delete_task(const Task &t);
-	std::vector<Task> retrieve_daily_tasks();
+	std::vector<Task> retrieve_active_tasks();
 
 private:
 	void log_exception(pqxx::sql_error &e);

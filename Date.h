@@ -15,6 +15,7 @@
 class Date {
 public:
 	Date(); // default constructor: gets current date from system clock
+	Date(std::string s); // new Date based on a date-formatted string
 	Date(time_t t); // new Date based on a given amount of milliseconds
 
 	Date(const Date &d)

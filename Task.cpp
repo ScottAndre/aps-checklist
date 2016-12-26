@@ -128,48 +128,11 @@ void Task::set_recurrence(int interval) {
 	_recurrence_interval = interval;
 }
 
-std::string serialize_recurrence_period(const std::vector<Weekday> &);
-
-Task_core Task::core() const {
-	Task_core core;
-	core.id = _id;
-	core.task = _task;
-	core.date = _date.get_raw_time();
-	core.recurrence = (int)_recurrence;
-	core.recurrence_interval = _recurrence_interval;
-	core.recurrence_period = serialize_recurrence_period(_recurrence_period);
-	core.persistent = _persistent;
-	core.complete = _complete;
-
-	return core;
-}
-
-Task Task::reconstruct(const Task_core &core) {
-	// must be a pointer, otherwise it attempts to call default constructor, and Task doesn't have one
-	Task *new_task;
-	switch((Recurrence)core.recurrence) {
-		case intervallic:
-			new_task = new Task(core.task, core.recurrence_interval, core.persistent, Date(core.date)); break;
-		case periodic:
-			new_task = new Task(core.task, core.recurrence_period, core.persistent, Date(core.date)); break;
-		default:
-			new_task = new Task(core.task, core.persistent, Date(core.date)); break;
-	}
-
-	Task reconstructed_task = *new_task;
-	delete new_task;
-
-	reconstructed_task._id = core.id;
-	reconstructed_task._complete = core.complete;
-
-	return reconstructed_task;
-}
-
 bool Task::exists_in_database() const {
 	return _id != -1;
 }
 
-std::string serialize_recurrence_period(const std::vector<Weekday> &period) {
+std::string Task::serialize_recurrence_period(const std::vector<Weekday> &period) {
 	std::stringstream serialized_period;
 	
 	for(auto it = period.begin(); it != period.end(); it++) {
