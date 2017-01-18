@@ -18,7 +18,7 @@ public:
 	virtual bool save_task(Task &t) = 0;
 	virtual bool insert_task(Task &t) = 0;
 	virtual bool update_task(const Task &t) = 0;
-	virtual bool delete_task(const Task &t) = 0;
+	virtual bool delete_task(Task &t) = 0;
 	virtual std::vector<Task> retrieve_active_tasks() = 0;
 };
 

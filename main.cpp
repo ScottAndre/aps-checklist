@@ -36,7 +36,7 @@ void display_active_tasks();
 void draw(const vector<Task> &);
 
 void add_task(int argc, char **args);
-void delete_task();
+void delete_task(int argc, char **args);
 
 Options default_options();
 Options get_options(int argc, char **args);
@@ -49,24 +49,37 @@ int main(int argc, char ** argv) {
 	/* no arguments - display tasks */
 	if(argc < 2) {
 		display_active_tasks();
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
 	/* help */
 	if(streq(argv[1], "h") || streq(argv[1], "help") || streq(argv[1], "-h") || streq(argv[1], "--help")) {
 		print_help(argv[0]);
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
 	/* add task */
 	if(streq(argv[1], "a") || streq(argv[1], "add") || streq(argv[1], "-a") || streq(argv[1], "--add")) {
+		if(argc == 2) {
+			cerr << "No task to add. Aborting." << endl;
+			return EXIT_FAILURE;
+		}
 		add_task(argc - 2, &argv[2]);
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
 	/* delete task */
+	if(streq(argv[1], "d") || streq(argv[1], "delete") || streq(argv[1], "-d") || streq(argv[1], "--delete")) {
+		if(argc == 2) {
+			cerr << "No task to delete. Aborting." << endl;
+			return EXIT_FAILURE;
+		}
+		delete_task(argc - 2, &argv[2]);
+		return EXIT_SUCCESS;
+	}
 
-	return 0;
+	cerr << "Unrecognized command " << argv[1] << ". Use the \"help\" command to see valid commands." << endl;
+	return EXIT_FAILURE;
 }
 
 void print_help(const char *program_name) {
@@ -80,9 +93,10 @@ void print_help(const char *program_name) {
 	cout << "\t\tA recurring task will appear either on certain days of the week, or every n days. Recurring tasks recur forever, or until they are deleted." << endl;
 	cout << "\t\t\tRecurrences should be specified either as an integer, or as a list of weekdays. Please specify the list of weekdays in the format \"MTWRFSU\"." << endl;
 	cout << "\t\tA persistent task will not leave the list until it has been completed." << endl;
-	cout << "Accepted contractions: a: add, d: on, r: recurs, p: persistent" << endl;
+	cout << "\t\tAccepted contractions: a: add, d: on, r: recurs, p: persistent" << endl;
 	cout << '\t' << program_name << " delete <task_id>" << endl;
 	cout << "\t\tDeletes the task with the given ID. IDs are displayed in parentheses after the task description." << endl;
+	cout << "\t\tAccepted contractions: d: delete" << endl;
 }
 
 void display_active_tasks() {
@@ -109,7 +123,7 @@ void draw(const vector<Task> &task_list) {
 	cout << now << ':' << endl;
 
 	for(Task t : incomplete) {
-		cout << '\t' << u8"\u2610" << "  " << t.desc() << " (" << t.id() << ')' << endl;
+		cout << '\t' << u8"\u2610" << "  " << t.desc() << " (ID: " << t.id() << ')' << endl;
 		cout << "\t\tDEBUG: start date: " << t.date() << " --- persistent: " << t.persistent() << " --- recurring: " << t.recurring() << endl;
 	}
 
@@ -118,7 +132,7 @@ void draw(const vector<Task> &task_list) {
 	}
 
 	for(Task t : complete) {
-		cout << '\t' << u8"\u2611" << "  " << t.desc() << " (" << t.id() << ')' << endl;
+		cout << '\t' << u8"\u2611" << "  " << t.desc() << " (ID: " << t.id() << ')' << endl;
 	}
 }
 
@@ -151,7 +165,20 @@ void add_task(int argc, char **args) {
 	Task t = *p;
 	delete p;
 
-	pg.save_task(t);
+	bool success = pg.save_task(t);
+	if(!success) {
+		cerr << "An error occurred during task creation. See the log for more details. Aborting." << endl;
+	}
+}
+
+void delete_task(int argc, char **args) {
+	PGAdaptor pg;
+
+	int task_id = stoi(args[0]);
+	bool success = pg.delete_task(task_id);
+	if(!success) {
+		cerr << "An error occurred during task deletion. See the log for more details. Aborting." << endl;
+	}
 }
 
 Options default_options() {

@@ -28,7 +28,8 @@ public:
 	bool save_task(Task &t);
 	bool insert_task(Task &t); // this will set the task's id - which is why it isn't const.
 	bool update_task(const Task &t);
-	bool delete_task(const Task &t);
+	bool delete_task(int t_id);
+	bool delete_task(Task &t); // same here. the task's id will be reset to -1 if successfully deleted.
 	std::vector<Task> retrieve_active_tasks();
 
 private:

@@ -80,7 +80,14 @@ bool PGAdaptor::update_task(const Task &t) {
 	}
 }
 
-bool PGAdaptor::delete_task(const Task &t) {
+bool PGAdaptor::delete_task(Task &t) {
+	bool success = delete_task(t._id);
+	if(success)
+		t._id = -1;
+	return success;
+}
+
+bool PGAdaptor::delete_task(int t_id) {
 	try {
 		pqxx::connection connection(_connection_string);
 
@@ -89,7 +96,7 @@ bool PGAdaptor::delete_task(const Task &t) {
 		connection.prepare("delete", delete_stream.str());
 
 		pqxx::work transaction(connection, "DeleteTask");
-		transaction.prepared("delete")(t._id).exec();
+		transaction.prepared("delete")(t_id).exec();
 		transaction.commit();
 		return true;
 	}

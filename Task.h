@@ -13,9 +13,9 @@
 #include "Date.h"
 
 enum Recurrence {
-	none,     // no recurrence
+	none,        // no recurrence
 	intervallic, // recurs once every x days
-	periodic  // recurs on certain days each week (maybe need new name)
+	periodic     // recurs on certain days each week (maybe need new name)
 };
 
 enum Weekday {
@@ -23,7 +23,7 @@ enum Weekday {
 };
 
 class Task {
-friend class PGAdaptor; //TODO: ideally we'd like to move towards using friendship between this and PGAdaptor rather than Task core, since anyone can make a Task core.
+friend class PGAdaptor;
 
 public:
 	Task(const std::string &task, bool p = false, Date d = Date());
