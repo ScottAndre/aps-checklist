@@ -316,9 +316,9 @@ void cleanup() {
 	auto tasks = pg.retrieve_tasks_needing_update();
 
 	for(Task t : tasks) {
-		cout << "DEBUG: Updating task: " << t.desc() << endl;
+		//cout << "DEBUG: Updating task: " << t.desc() << endl;
 		Date next_occurrence = t.next_occurrence_on_or_after(today);
-		cout << "DEBUG: Next occurrence: " << next_occurrence.to_string() << endl;
+		//cout << "DEBUG: Next occurrence: " << next_occurrence.to_string() << endl;
 		t.set_date(next_occurrence);
 		t.mark_incomplete();
 		success = pg.save_task(t);
