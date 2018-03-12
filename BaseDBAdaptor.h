@@ -11,6 +11,7 @@
 
 #include <vector>
 
+#include "Date.h"
 #include "Task.h"
 
 class DBAdaptor {
@@ -20,6 +21,9 @@ public:
 	virtual bool update_task(const Task &t) = 0;
 	virtual bool delete_task(Task &t) = 0;
 	virtual std::vector<Task> retrieve_active_tasks() = 0;
+
+	virtual Date retrieve_last_cleanup_date() = 0;
+	virtual std::vector<Task> retrieve_tasks_needing_update() = 0;
 };
 
 #endif

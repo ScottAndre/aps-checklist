@@ -36,7 +36,11 @@ void display_active_tasks();
 void draw(const vector<Task> &);
 
 void add_task(int argc, char **args);
-void delete_task(int argc, char **args);
+void delete_tasks(int argc, char **args);
+void complete_tasks(int argc, char **args);
+void incomplete_tasks(int argc, char **args);
+
+void cleanup();
 
 Options default_options();
 Options get_options(int argc, char **args);
@@ -46,6 +50,9 @@ bool streq(const char *one, const char *two) {
 }
 
 int main(int argc, char ** argv) {
+	/* run cleanup first, updating task recurrences */
+	cleanup();
+
 	/* no arguments - display tasks */
 	if(argc < 2) {
 		display_active_tasks();
@@ -71,10 +78,30 @@ int main(int argc, char ** argv) {
 	/* delete task */
 	if(streq(argv[1], "d") || streq(argv[1], "delete") || streq(argv[1], "-d") || streq(argv[1], "--delete")) {
 		if(argc == 2) {
-			cerr << "No task to delete. Aborting." << endl;
+			cerr << "No tasks to delete. Aborting." << endl;
 			return EXIT_FAILURE;
 		}
-		delete_task(argc - 2, &argv[2]);
+		delete_tasks(argc - 2, &argv[2]);
+		return EXIT_SUCCESS;
+	}
+
+	/* complete task */
+	if(streq(argv[1], "c") || streq(argv[1], "complete") || streq(argv[1], "-c") || streq(argv[1], "--complete")) {
+		if(argc == 2) {
+			cerr << "No tasks to mark complete. Aborting." << endl;
+			return EXIT_FAILURE;
+		}
+		complete_tasks(argc - 2, &argv[2]);
+		return EXIT_SUCCESS;
+	}
+
+	/* incomplete task */
+	if(streq(argv[1], "i") || streq(argv[1], "incomplete") || streq(argv[1], "-i") || streq(argv[1], "--incomplete")) {
+		if(argc == 2) {
+			cerr << "No tasks to mark incomplete. Aborting." << endl;
+			return EXIT_FAILURE;
+		}
+		incomplete_tasks(argc - 2, &argv[2]);
 		return EXIT_SUCCESS;
 	}
 
@@ -94,9 +121,13 @@ void print_help(const char *program_name) {
 	cout << "\t\t\tRecurrences should be specified either as an integer, or as a list of weekdays. Please specify the list of weekdays in the format \"MTWRFSU\"." << endl;
 	cout << "\t\tA persistent task will not leave the list until it has been completed." << endl;
 	cout << "\t\tAccepted contractions: a: add, d: on, r: recurs, p: persistent" << endl;
-	cout << '\t' << program_name << " delete <task_id>" << endl;
-	cout << "\t\tDeletes the task with the given ID. IDs are displayed in parentheses after the task description." << endl;
+	cout << '\t' << program_name << " delete <task_id> [<task_id> ...]" << endl;
+	cout << "\t\tDeletes the task(s) with the given ID(s). IDs are displayed in parentheses after the task description." << endl;
 	cout << "\t\tAccepted contractions: d: delete" << endl;
+	cout << '\t' << program_name << " complete <task_id> [<task_id> ...]" << endl;
+	cout << "\t\tMarks the task(s) complete." << endl;
+	cout << '\t' << program_name << " incomplete <task_id> [<task_id> ...]" << endl;
+	cout << "\t\tMarks the task(s) incomplete." << endl;
 }
 
 void display_active_tasks() {
@@ -122,9 +153,13 @@ void draw(const vector<Task> &task_list) {
 	Date now;
 	cout << now << ':' << endl;
 
+	if(task_list.size() == 0) {
+		cout << "\tNothing to do!" << endl;
+	}
+
 	for(Task t : incomplete) {
 		cout << '\t' << u8"\u2610" << "  " << t.desc() << " (ID: " << t.id() << ')' << endl;
-		cout << "\t\tDEBUG: start date: " << t.date() << " --- persistent: " << t.persistent() << " --- recurring: " << t.recurring() << endl;
+		//cout << "\t\tDEBUG: start date: " << t.date() << " --- persistent: " << t.persistent() << " --- recurring: " << t.recurring() << endl;
 	}
 
 	if(incomplete.size() > 0 && complete.size() > 0) {
@@ -171,13 +206,49 @@ void add_task(int argc, char **args) {
 	}
 }
 
-void delete_task(int argc, char **args) {
+void delete_tasks(int argc, char **args) {
 	PGAdaptor pg;
 
-	int task_id = stoi(args[0]);
-	bool success = pg.delete_task(task_id);
+	bool success = true;
+	for(int i = 0; i < argc; i++) {
+		int task_id = stoi(args[i]);
+		bool s = pg.delete_task(task_id);
+		success = success && s;
+	}
 	if(!success) {
 		cerr << "An error occurred during task deletion. See the log for more details. Aborting." << endl;
+	}
+}
+
+void complete_tasks(int argc, char **args) {
+	PGAdaptor pg;
+
+	bool success = true;
+	for(int i = 0; i < argc; i++) {
+		int task_id = stoi(args[i]);
+		Task task = pg.retrieve_task(task_id);
+		task.mark_complete();
+		bool s = pg.save_task(task);
+		success = success && s;
+	}
+	if(!success) {
+		cerr << "An error occurred during task completion. See the log for more details. Aborting." << endl;
+	}
+}
+
+void incomplete_tasks(int argc, char **args) {
+	PGAdaptor pg;
+
+	bool success = true;
+	for(int i = 0; i < argc; i++) {
+		int task_id = stoi(args[i]);
+		Task task = pg.retrieve_task(task_id);
+		task.mark_incomplete();
+		bool s = pg.save_task(task);
+		success = success && s;
+	}
+	if(!success) {
+		cerr << "An error occurred during task incompletion. See the log for more details. Aborting." << endl;
 	}
 }
 
@@ -229,4 +300,32 @@ Options get_options(int argc, char **args) {
 		}
 	}
 	return opts;
+}
+
+void cleanup() {
+	PGAdaptor pg;
+	Date today;
+	Date last_cleanup_date = pg.retrieve_last_cleanup_date();
+	long days_since_last_cleanup = Date::days_between(today, last_cleanup_date);
+
+	if(days_since_last_cleanup == 0) {
+		return;
+	}
+
+	bool success = true;
+	auto tasks = pg.retrieve_tasks_needing_update();
+
+	for(Task t : tasks) {
+		cout << "DEBUG: Updating task: " << t.desc() << endl;
+		Date next_occurrence = t.next_occurrence_on_or_after(today);
+		cout << "DEBUG: Next occurrence: " << next_occurrence.to_string() << endl;
+		t.set_date(next_occurrence);
+		t.mark_incomplete();
+		success = pg.save_task(t);
+	}
+
+	success = pg.update_last_cleanup_date(today);
+	if(!success) {
+		cerr << "One or more errors occurred while updating recurring tasks. See the log for details." << endl;
+	}
 }

@@ -70,13 +70,28 @@ std::string Date::to_string() const {
 	return str_representation;
 }
 
-std::string Date::get_day() const {
+int Date::get_day_of_week() const {
+	time_t t = this->get_raw_time();
+	auto time = std::localtime(&t);
+	int day = time->tm_wday;
+	// convert to our Weekday representation - Monday is 0, Sunday is 6
+	if(day == 0) {
+		day = 6;
+	}
+	else {
+		day -= 1;
+	}
+	return day;
+}
+
+std::string Date::get_day_string() const {
 	std::string str_representation = this->to_string();
 	return str_representation.substr(0, str_representation.find_first_of(','));
 }
 
-std::string Date::to_db_representation(time_t t) {
+std::string Date::to_db_representation() const {
 	// Uses YYYY-MM-DD format
+	time_t t = this->get_raw_time();
 	char rep[11];
 	auto time = std::localtime(&t);
 	std::strftime(rep, 11, "%Y-%m-%d", time);
@@ -94,6 +109,14 @@ Date Date::from_db_representation(std::string s) {
 	init_tm(&time, year, month, day);
 	Date d(std::mktime(&time));
 	return d;
+}
+
+long Date::days_between(Date one, Date two) {
+	double diff = std::difftime(one.get_raw_time(), two.get_raw_time()); // difference in seconds
+	if(diff < 0) {
+		diff *= -1;
+	}
+	return (long)diff / Date::days; // divide by 24 hrs to get the difference in days
 }
 
 std::ostream &operator<<(std::ostream &out, const Date &d) {

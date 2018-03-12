@@ -14,6 +14,12 @@
 
 class Date {
 public:
+	// useful constants when manipulating Dates
+	const static int seconds = 1;
+	const static int minutes = 60*seconds;
+	const static int hours = 60*minutes;
+	const static int days = 24*hours;
+
 	Date(); // default constructor: gets current date from system clock
 	Date(std::string s); // new Date based on a date-formatted string
 	Date(time_t t); // new Date based on a given amount of milliseconds
@@ -70,10 +76,13 @@ public:
 
 	time_t get_raw_time() const { return _time; }
 	time_t localtime() const;
-	std::string get_day() const;
+	int get_day_of_week() const;
+	std::string get_day_string() const;
 
-	static std::string to_db_representation(time_t t);
+	std::string to_db_representation() const;
 	static Date from_db_representation(std::string s);
+
+	static long days_between(Date one, Date two);
 
 private:
 	time_t _time;

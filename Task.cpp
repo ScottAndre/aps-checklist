@@ -78,19 +78,54 @@ bool Task::operator!=(const Task &t) {
 	return !(*this == t);
 }
 
-void Task::update() {
-	if(_recurrence == periodic) {
+Date Task::next_occurrence_on_or_after(const Date d) const {
+	if(d <= _date) {
+		return _date;
+	}
 
+	if(_recurrence == periodic) {
+		int w = d.get_day_of_week();
+		//Weekday next_occurrence;
+		int min_distance = 8; // the next occurrence will never be more than a week away
+		// loop through recurrence_period, find the day after w with the lowest distance from w
+		for(Weekday occurrence : _recurrence_period) {
+			int distance = (int)occurrence - w;
+			if(distance < 0) {
+				distance += 7; // if this occurrence is a day earlier in the week than w, add 7 days to it to get next week's occurrence
+			}
+			if(distance < min_distance) {
+				//next_occurrence = occurrence;
+				min_distance = distance;
+			}
+		}
+		Date difference(min_distance * Date::days);
+		return d + difference;
 	}
 	else if(_recurrence == intervallic) {
-
+		int w = Date::days_between(d, _date);
+		// round up to the next multiple of _reccurrence_interval
+		int x = (w / _recurrence_interval) * _recurrence_interval;
+		if(w % _recurrence_interval != 0) {
+			x += _recurrence_interval;
+		}
+		Date difference(x * Date::days);
+		return _date + difference;
 	}
+	else {
+		std::cerr << "WARNING: tried to get next occurrence of a non-recurring task." << std::endl;
+		Date not_real(0);
+		return not_real;
+	}
+}
+
+void Task::set_date(const Date d) {
+	_date = d;
 }
 
 // Accepts a string in the form "MTWRFSU" where each character indicates a day on which the task should recur
 void Task::set_recurrence(const std::string &period) {
 	if(_recurrence != periodic) {
-		std::cerr << "Warning: setting recurrence period on a non-periodic task\n";
+		std::cerr << "Warning: setting recurrence period on a non-periodic task" << std::endl;
 	} // bad things happen
 
 	for(char day : period) {

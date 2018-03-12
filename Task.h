@@ -53,9 +53,9 @@ public:
 	bool persistent() const { return _persistent; }
 
 	Date date() const { return _date; }
+	Date next_occurrence_on_or_after(const Date d) const;
 
-	void update(); // for recurring tasks, updates the Task's date to the next occurence
-
+	void set_date(const Date d);
 	void set_recurrence(const std::string &period); // set periodic recurrence for a task. Throws an error if _recurrence != periodic
 	void set_recurrence(int interval); // set interval recurrence for a task. Throws an error if _recurrence != intervallic
 
