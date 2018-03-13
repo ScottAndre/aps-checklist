@@ -137,7 +137,7 @@ std::vector<Task> PGAdaptor::retrieve_active_tasks() {
 		Date today;
 
 		std::stringstream retrieve_stream;
-		retrieve_stream << "SELECT * FROM " << DB_TASKS_TABLE << " WHERE date = $1 OR persistent = true ORDER BY id;";
+		retrieve_stream << "SELECT * FROM " << DB_TASKS_TABLE << " WHERE date = $1 OR (persistent = true AND complete = false) ORDER BY id;";
 		connection.prepare("retrieve", retrieve_stream.str());
 
 		pqxx::work transaction(connection, "RetrieveTasks");
