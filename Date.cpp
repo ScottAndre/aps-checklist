@@ -14,7 +14,7 @@
 void init_tm(std::tm *time, unsigned int year, unsigned int month, unsigned int day) {
 	time->tm_sec = 0;
 	time->tm_min = 0;
-	time->tm_hour = 12; // gives us some wiggle room
+	time->tm_hour = 1; // gives us some wiggle room
 	time->tm_mday = day;
 	time->tm_mon = month - 1; // months since January: 0 - 11
 	time->tm_year = year - 1900; // years since 1900
